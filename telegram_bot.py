@@ -1,11 +1,9 @@
-from typing import final
 from telegram import Update, ReplyKeyboardMarkup
 import webscrape as wbs
 from telegram.ext import Application, CommandHandler, ConversationHandler, MessageHandler, filters, ContextTypes
 import sentiment_analysis
-
-TOKEN : final = "7815486854:AAF3sfjvyVfUNzojTg7kJlv9FPot5w_KaRU"
-BOT_USERNAME : final = "@test1221304422_bot"
+import constants
+import requests
 
 async def start_command(update : Update, context : ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hello! How can I help you?")
@@ -17,10 +15,12 @@ async def news_command(update : Update, context : ContextTypes.DEFAULT_TYPE):
 
 async def get_news(update : Update, context : ContextTypes.DEFAULT_TYPE):
     topic = update.message.text
-    url = wbs.search_word(topic)
-    for i in wbs.get_first_n_articles(url, 10):
-        await update.message.reply_text(i)
-        # sentiment_analysis.sentiment_analysis()
+    url = wbs.search_word(topic, "MY")
+    for title, article_url in wbs.get_first_n_articles(url, 3):
+        analysis = sentiment_analysis.sentiment_analysis(title)
+        await update.message.reply_text("Title :" + title)
+        await update.message.reply_text("Analysis : " + sentiment_analysis.stringify(analysis))
+        await update.message.reply_text("URL :" + article_url)
     return CHOICE
 
 async def track_command(update : Update, context : ContextTypes.DEFAULT_TYPE):
@@ -28,6 +28,16 @@ async def track_command(update : Update, context : ContextTypes.DEFAULT_TYPE):
     return TRACK_UPDATES
 
 async def track_url(update : Update, context : ContextTypes.DEFAULT_TYPE):
+    url = update.message.text
+    try:
+        result = requests.get(url)
+        if result.status_code > 300:
+            await update.message.reply_text("URL could not be tracked.")
+        else:
+            #track url features
+            pass
+    except:
+        await update.message.reply_text("Invalid URL.")
     await update.message.reply_text("URL is being tracked.")
     return CHOICE
 
@@ -40,7 +50,7 @@ CHOICE, NEWS, TRACK_UPDATES = range (3)
 
 if __name__ == "__main__":
     print("starting")
-    app = Application.builder().token(TOKEN).build()
+    app = Application.builder().token(constants.TOKEN).build()
 
     conversation_handler = ConversationHandler(entry_points= [CommandHandler("start", start_command)],
                                                states ={

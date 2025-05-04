@@ -1,42 +1,55 @@
 from bs4 import BeautifulSoup
 import requests
-from urllib.parse import urlparse, urljoin
-import base64
+from urllib.parse import urlparse
+import test
+
 
 def get_first_n_articles(url, n):
     result = requests.get(url)
-    doc = BeautifulSoup(result.text, "html.parser")
-    a = doc.find_all("article")
+    doc = BeautifulSoup(result.text, features="xml")
+    a = doc.find_all("item")
     article_list = []
-    parsed_url = urlparse(url)
+    count = 1
+    for item in a:
+        if count <= n:
+            article_url = item.find("link").text
+            article_title = clean_title(item.find("title").text)
+            new_url = test.get_article_url(article_url)
+            article_list.append((article_title, new_url))
+            count += 1
+        else:
+            break
+    return article_list
 
-    for i in a:
-        x = i.find("a")
-        article_url = (f"{parsed_url.scheme}://{parsed_url.netloc}{x["href"].lstrip('.')}")
-        article_list.append(article_url)
-    return article_list[0 : min(len(article_list), n)]
+def get_all_paragraphs(url):
+    try:
+        result = requests.get(url)
+        doc = BeautifulSoup(result.text, "html.parser")
+        paragraphs = doc.find_all("p")
+        print(len(paragraphs))
+        string = ""
+        for i in paragraphs:
+            string += i.find("p").text
+    except:
+        return string
+    return string
 
-def search_word(word):
+
+def search_word(word, country):
     url = "https://news.google.com"
-    search_word = "search?q=" + word
+    search_word = "search?q=" + word +"&ceid=" + country + ":en"
     parsed_url = urlparse(url)
-    base_url = (f"{parsed_url.scheme}://{parsed_url.netloc}/{search_word}")
+    base_url = (f"{parsed_url.scheme}://{parsed_url.netloc}/rss/{search_word}")
     return base_url
+
+def clean_title(title):
+    return title[:title.find("-")]
 
 if __name__ == "__main__":
     word = input("enter word to search :")
-    url = search_word(word)
-    new_url = get_first_n_articles(url, 1)[0]
-    final = requests.get(new_url, allow_redirects=True)
-    soup = BeautifulSoup(final.text, "html.parser")
-    
-    print(new_url)
-    with open("file.txt", "w") as file:
-        for i in soup.prettify().split("\n"):
-            try:
-                file.write(i)
-            except:
-                continue
-
-
-    parsed_new_url = urlparse(new_url)
+    url = search_word(word, "MY")
+    new_urls = get_first_n_articles(url, 3)[2]
+    # for i, j in new_urls:
+    i, j = new_urls
+    print(j)
+    print(get_all_paragraphs(j))
