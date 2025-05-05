@@ -26,10 +26,9 @@ def get_all_paragraphs(url):
         result = requests.get(url)
         doc = BeautifulSoup(result.text, "html.parser")
         paragraphs = doc.find_all("p")
-        print(len(paragraphs))
         string = ""
         for i in paragraphs:
-            string += i.find("p").text
+            string = f"{string} {i.text}"
     except:
         return string
     return string
@@ -48,7 +47,7 @@ def clean_title(title):
 if __name__ == "__main__":
     word = input("enter word to search :")
     url = search_word(word, "MY")
-    new_urls = get_first_n_articles(url, 3)[2]
+    new_urls = get_first_n_articles(url, 3)[0]
     # for i, j in new_urls:
     i, j = new_urls
     print(j)

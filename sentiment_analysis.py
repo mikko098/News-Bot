@@ -20,14 +20,19 @@ def preprocess_text(text):
 
 def sentiment_analysis(text):
     scores = analyzer.polarity_scores(preprocess_text(text))
-    key = max(scores.keys(), key = lambda s: scores[s])
-    return key, scores[key]
+    sorted_keys = sorted(zip(scores.keys(), scores.values()), key = lambda s: scores[s[0]], reverse = True)
+    return sorted_keys
 
 def stringify(values):
-    i, j = values
-    if j > 0.8:
-        return ("Mostly " + dict[i])
-    elif j > 0.5:
-        return ("Slightly " + dict[i])
-    else:
-        return ("Mixed, but leaning towards " + dict[i])
+    for i,j in values:
+        if i == "compound":
+            continue
+        if j > 0.8:
+            return ("Mostly " + dict[i])
+        elif j > 0.5:
+            return ("Slightly " + dict[i])
+        else:
+            return ("Mixed, but leaning towards " + dict[i])
+
+if __name__ == "__main__":
+    print(sentiment_analysis("i hate you"))

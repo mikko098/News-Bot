@@ -17,10 +17,11 @@ async def get_news(update : Update, context : ContextTypes.DEFAULT_TYPE):
     topic = update.message.text
     url = wbs.search_word(topic, "MY")
     for title, article_url in wbs.get_first_n_articles(url, 3):
-        analysis = sentiment_analysis.sentiment_analysis(title)
-        await update.message.reply_text("Title :" + title)
+        input = wbs.get_all_paragraphs(article_url)
+        analysis = sentiment_analysis.sentiment_analysis(input)
+        await update.message.reply_text("Title : " + title)
         await update.message.reply_text("Analysis : " + sentiment_analysis.stringify(analysis))
-        await update.message.reply_text("URL :" + article_url)
+        await update.message.reply_text("URL : " + article_url)
     return CHOICE
 
 async def track_command(update : Update, context : ContextTypes.DEFAULT_TYPE):
